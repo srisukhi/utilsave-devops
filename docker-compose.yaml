@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  saveboltui:
+    build: 
+      context: '/home/ubuntu/ovp'
+      dockerfile: './saveboltUI/Dockerfile'
+    container_name: frontend
+    ports:
+      - "4270:4270"
+    depends_on:
+      edifel:
+        condition: service_started
+  edifel:
+    build: 
+      context: '/home/ubuntu/edifel'
+      dockerfile: './Dockerfile'
+    container_name: backend
+    ports:
+      - "9090:9090"
+    environment:
+      - LOCATION=warmcache
+    volumes:
+      - ./data:/data
+  proxy:
+    image: nginx
+    volumes:
+     - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+     - "80:80"
+     - "443:443"

@@ -3,8 +3,8 @@ version: '3.7'
 services:
   saveboltui:
     build: 
-      context: '/home/ubuntu/ovp'
-      dockerfile: './saveboltUI/Dockerfile'
+      context: '/home/ubuntu/ovp/saveboltUI/'
+      dockerfile: './Dockerfile'
     container_name: frontend
     ports:
       - "4270:4270"

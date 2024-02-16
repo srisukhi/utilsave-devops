@@ -3,25 +3,16 @@ version: '3.7'
 services:
   saveboltui:
     build: 
-      context: '/home/ubuntu/ovp/saveboltUI/'
+      context: '/Users/theo/Documents/cvpworkspace/ovp/saveboltUI/'
       dockerfile: './Dockerfile'
-    container_name: frontend
+    container_name: saveboltui
     ports:
       - "4270:4270"
     depends_on:
       edifel:
         condition: service_started
-  edifel:
-    build: 
-      context: '/home/ubuntu/edifel'
-      dockerfile: './Dockerfile'
-    container_name: backend
-    ports:
-      - "9090:9090"
-    environment:
-      - LOCATION=warmcache
-    volumes:
-      - ./data:/data
+    networks:
+      - edinet
   proxy:
     image: nginx
     volumes:
@@ -29,3 +20,76 @@ services:
     ports:
      - "80:80"
      - "443:443"
+  edifel:
+    build:
+      context: '/Users/theo/Documents/cvpworkspace/edifel/'
+      dockerfile: './app/server/Dockerfile'
+    hostname: edifel
+    container_name: edifel
+    env_file:
+      - .env
+    volumes:
+      - /Users/theo/Documents/cvpworkspace/edifel/data:/data
+    ports:
+      - '9090:9090'
+    environment:
+      - LOCATION=warmcache
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - edinet
+    
+  proposalgen:
+    build:
+      context: '/Users/theo/Documents/cvpworkspace/edifel/'
+      dockerfile: './app/client/Dockerfile'
+    hostname: proposalgen
+    container_name: proposalgen
+    env_file:
+      - .env
+    volumes:
+      - /Users/theo/Documents/cvpworkspace/edifel/data:/data
+    ports:
+      - '8501:8501'
+    depends_on:
+      - edifel
+    networks:
+      - edinet
+
+  redis:
+    image: redis:alpine
+    hostname: redis
+    container_name: redis
+    restart: on-failure
+    ports:
+      - '6379:6379'
+    command: redis-server
+    volumes:
+      - redis:/data
+    networks:
+      - edinet
+
+  mongodb:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongodb
+    env_file:
+      - ./.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    volumes:
+      - mongodb:/data/db
+    ports:
+      - 27017:27017
+    networks:
+      - edinet
+
+volumes:
+  mongodb:
+  redis:
+    driver: local
+
+networks:
+  edinet:

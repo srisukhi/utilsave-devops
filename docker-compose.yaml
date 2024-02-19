@@ -20,6 +20,12 @@ services:
     ports:
      - "80:80"
      - "443:443"
+    networks:
+      - edinet
+    depends_on:
+      - saveboltui
+      - edifel
+      - proposalgen
   edifel:
     build:
       context: '/Users/theo/Documents/cvpworkspace/edifel/'
